@@ -197,6 +197,8 @@ const JSONEditor = ({ content, onContentChange, theme }) => {
     glyphMargin: false,
     // 继承父组件传递的主题样式
     theme: theme,
+    // 设置编辑器语言为中文
+    language: "zh-cn",
     // 添加主题相关颜色配置
     colors: {
       "editor.background": theme === "vs-dark" ? "#1e1e1e" : "#fffffe",
@@ -284,12 +286,12 @@ const JSONEditor = ({ content, onContentChange, theme }) => {
       </div>
       <div
         style={{
-          padding: "8px",
+          padding: "12px 16px",
           background: theme === "vs-dark" ? "#1e1e1e" : "#ffffff",
           borderTop: "1px solid " + (theme === "vs-dark" ? "#333" : "#ddd"),
           display: "flex",
           alignItems: "center",
-          gap: "8px",
+          gap: "12px",
         }}
       >
         <button
@@ -301,7 +303,8 @@ const JSONEditor = ({ content, onContentChange, theme }) => {
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
-            padding: "4px",
+            padding: "8px",
+            fontSize: "16px",
           }}
           title="正则表达式搜索"
         >
@@ -316,7 +319,8 @@ const JSONEditor = ({ content, onContentChange, theme }) => {
             border: "none",
             color: theme === "vs-dark" ? "#d4d4d4" : "#333333",
             cursor: "pointer",
-            padding: "4px",
+            padding: "8px",
+            fontSize: "16px",
           }}
           title="格式化JSON"
         >
@@ -332,7 +336,8 @@ const JSONEditor = ({ content, onContentChange, theme }) => {
             border: "none",
             color: theme === "vs-dark" ? "#d4d4d4" : "#333333",
             cursor: "pointer",
-            padding: "4px",
+            padding: "8px",
+            fontSize: "16px",
           }}
           title="折叠全部"
         >
@@ -346,7 +351,8 @@ const JSONEditor = ({ content, onContentChange, theme }) => {
             border: "none",
             color: theme === "vs-dark" ? "#d4d4d4" : "#333333",
             cursor: "pointer",
-            padding: "4px",
+            padding: "8px",
+            fontSize: "16px",
           }}
           title="展开全部"
         >
@@ -360,7 +366,8 @@ const JSONEditor = ({ content, onContentChange, theme }) => {
             border: "none",
             color: theme === "vs-dark" ? "#d4d4d4" : "#333333",
             cursor: "pointer",
-            padding: "4px",
+            padding: "8px",
+            fontSize: "16px",
           }}
           title="去除注释"
         >
@@ -374,7 +381,8 @@ const JSONEditor = ({ content, onContentChange, theme }) => {
             border: "none",
             color: theme === "vs-dark" ? "#d4d4d4" : "#333333",
             cursor: "pointer",
-            padding: "4px",
+            padding: "8px",
+            fontSize: "16px",
           }}
           title="压缩JSON并复制"
         >
@@ -388,7 +396,8 @@ const JSONEditor = ({ content, onContentChange, theme }) => {
             border: "none",
             color: theme === "vs-dark" ? "#d4d4d4" : "#333333",
             cursor: "pointer",
-            padding: "4px",
+            padding: "8px",
+            fontSize: "16px",
           }}
           title="压缩转义JSON并复制"
         >
@@ -402,7 +411,8 @@ const JSONEditor = ({ content, onContentChange, theme }) => {
             border: "none",
             color: theme === "vs-dark" ? "#d4d4d4" : "#333333",
             cursor: "pointer",
-            padding: "4px",
+            padding: "8px",
+            fontSize: "16px",
           }}
           title="转换为XML并复制"
         >
@@ -416,7 +426,8 @@ const JSONEditor = ({ content, onContentChange, theme }) => {
             border: "none",
             color: theme === "vs-dark" ? "#d4d4d4" : "#333333",
             cursor: "pointer",
-            padding: "4px",
+            padding: "8px",
+            fontSize: "16px",
           }}
           title="转换为TypeScript并复制"
         >
