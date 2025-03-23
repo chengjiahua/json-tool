@@ -44,13 +44,15 @@ const History = ({
   // 加载历史记录
   const loadHistory = async () => {
     try {
-      // 使用preload中的服务读取历史记录文件
-      const historyData = await window.services.readJsonFile("history.json");
-      if (Array.isArray(historyData)) {
-        setHistory(historyData);
+      // 使用uTools的DB API读取历史记录
+      const historyData = window.utools.db.get("json-tool-history");
+      if (historyData && Array.isArray(historyData.value)) {
+        setHistory(historyData.value);
+      } else {
+        setHistory([]);
       }
     } catch (error) {
-      console.log("No history found or error loading history:", error);
+      console.log("Error loading history:", error);
       setHistory([]);
     }
   };
@@ -81,8 +83,11 @@ const History = ({
       );
       setHistory(updatedHistory);
 
-      // 保存到文件
-      await window.services.writeJsonFile("history.json", updatedHistory);
+      // 使用uTools的DB API保存历史记录
+      window.utools.db.put({
+        _id: "json-tool-history",
+        value: updatedHistory,
+      });
     } catch (error) {
       // 如果不是有效的JSON，不保存到历史记录
       console.error("Invalid JSON or error saving history:", error);
@@ -119,7 +124,13 @@ const History = ({
   const clearAllHistory = async () => {
     if (window.confirm("确定要清除所有历史记录吗？")) {
       setHistory([]);
-      await window.services.writeJsonFile("history.json", []);
+      // 使用uTools的DB API清除历史记录
+      window.utools.db.remove("json-tool-history");
+      // 重新创建一个空的历史记录
+      window.utools.db.put({
+        _id: "json-tool-history",
+        value: [],
+      });
     }
   };
 
@@ -145,7 +156,7 @@ const History = ({
       <div className="history-content">
         <div className="history-header">
           <h3>
-            <FaHistory /> JSON历史记录
+            <FaHistory /> 历史记录
           </h3>
           {history.length > 0 && (
             <button

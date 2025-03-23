@@ -18,7 +18,7 @@ function App() {
    * 编辑器主题状态（vs-dark/light）
    * @type {[string, Function]}
    */
-  const [theme, setTheme] = useState("vs-dark");
+  const [theme, setTheme] = useState("light");
 
   /**
    * 历史侧边栏可见性状态
