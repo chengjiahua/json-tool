@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import Editor from "@monaco-editor/react";
 import { debounce } from "lodash";
 import {
@@ -10,8 +10,15 @@ import {
   FaCopy,
   FaFileCode,
   FaFileAlt,
+  FaSun,
+  FaMoon,
+  FaCaretDown,
+  FaFileExport,
+  FaCompress,
+  FaFolder,
 } from "react-icons/fa";
 import { BiCollapseVertical, BiExpandVertical } from "react-icons/bi";
+import "./styles.css";
 
 /**
  * JSON编辑器组件，集成Monaco编辑器实现
@@ -21,9 +28,24 @@ import { BiCollapseVertical, BiExpandVertical } from "react-icons/bi";
  * @param {Function} props.onContentChange - 内容变更回调函数
  * @param {'vs-dark'|'light'} props.theme - 编辑器主题样式
  */
-const JSONEditor = ({ content, onContentChange, theme }) => {
+const JSONEditor = ({ content, onContentChange, theme, onThemeChange }) => {
   const editorRef = useRef(null);
   const [searchVisible, setSearchVisible] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState(null);
+
+  // 点击文档其他地方时关闭下拉菜单
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (activeDropdown && !event.target.closest(".dropdown-container")) {
+        setActiveDropdown(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [activeDropdown]);
 
   // 格式化JSON
   const formatJSON = () => {
@@ -177,6 +199,94 @@ const JSONEditor = ({ content, onContentChange, theme }) => {
     }
   };
 
+  // JSON转YAML并复制
+  const convertToYAMLAndCopy = () => {
+    if (editorRef.current) {
+      try {
+        const value = editorRef.current.getValue();
+        const jsonObj = JSON.parse(value);
+
+        const toYAML = (obj, indent = 0) => {
+          let yaml = "";
+          const spaces = " ".repeat(indent);
+
+          if (Array.isArray(obj)) {
+            if (obj.length === 0) return spaces + "[]\n";
+
+            for (let i = 0; i < obj.length; i++) {
+              const value = obj[i];
+              if (typeof value === "object" && value !== null) {
+                yaml += spaces + "- \n" + toYAML(value, indent + 2);
+              } else {
+                yaml += spaces + "- " + JSON.stringify(value) + "\n";
+              }
+            }
+          } else {
+            for (const key in obj) {
+              const value = obj[key];
+              if (typeof value === "object" && value !== null) {
+                yaml += spaces + key + ":\n" + toYAML(value, indent + 2);
+              } else {
+                yaml += spaces + key + ": " + JSON.stringify(value) + "\n";
+              }
+            }
+          }
+
+          return yaml;
+        };
+
+        const yamlStr = toYAML(jsonObj);
+        navigator.clipboard.writeText(yamlStr);
+      } catch (error) {
+        console.error("Failed to convert to YAML:", error);
+      }
+    }
+  };
+
+  // 去除回车
+  const removeLineBreaks = () => {
+    if (editorRef.current) {
+      try {
+        const value = editorRef.current.getValue();
+        const noLineBreaks = value.replace(/[\r\n]/g, "");
+        editorRef.current.setValue(noLineBreaks);
+      } catch (error) {
+        console.error("Failed to remove line breaks:", error);
+      }
+    }
+  };
+
+  // 去除转义
+  const removeEscapes = () => {
+    if (editorRef.current) {
+      try {
+        const value = editorRef.current.getValue();
+        const unescaped = value.replace(/\\([\\"'\/bfnrt])/g, "$1");
+        editorRef.current.setValue(unescaped);
+      } catch (error) {
+        console.error("Failed to remove escapes:", error);
+      }
+    }
+  };
+
+  // 切换主题
+  const toggleTheme = () => {
+    const newTheme = theme === "vs-dark" ? "light" : "vs-dark";
+    // 通知父组件主题已更改
+    if (typeof onThemeChange === "function") {
+      onThemeChange(newTheme);
+    }
+  };
+
+  // 处理下拉菜单点击
+  const handleDropdownToggle = (dropdownName) => {
+    if (activeDropdown === dropdownName) {
+      setActiveDropdown(null);
+    } else {
+      setActiveDropdown(dropdownName);
+    }
+  };
+
   // 编辑器配置项
   const options = {
     // 禁用右侧小地图预览
@@ -222,42 +332,13 @@ const JSONEditor = ({ content, onContentChange, theme }) => {
   }, 500);
 
   return (
-    <div
-      style={{
-        height: "100vh",
-        width: "100vw",
-        position: "relative",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
+    <div className="json-editor-container">
       {searchVisible && (
-        <div
-          style={{
-            position: "absolute",
-            top: "0",
-            left: "0",
-            right: "0",
-            padding: "8px",
-            background: theme === "vs-dark" ? "#1e1e1e" : "#ffffff",
-            borderBottom:
-              "1px solid " + (theme === "vs-dark" ? "#333" : "#ddd"),
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            zIndex: 1,
-          }}
-        >
+        <div className={`search-container ${theme}`}>
           <input
             type="text"
             placeholder="正则表达式搜索..."
-            style={{
-              padding: "4px 8px",
-              border: "1px solid " + (theme === "vs-dark" ? "#333" : "#ddd"),
-              borderRadius: "4px",
-              background: theme === "vs-dark" ? "#2d2d2d" : "#ffffff",
-              color: theme === "vs-dark" ? "#ffffff" : "#000000",
-            }}
+            className={`search-input ${theme}`}
             onChange={(e) => {
               if (editorRef.current) {
                 const searchParams = new URLSearchParams(e.target.value);
@@ -270,7 +351,7 @@ const JSONEditor = ({ content, onContentChange, theme }) => {
           />
         </div>
       )}
-      <div style={{ flex: 1, position: "relative" }}>
+      <div className="input-section">
         <Editor
           height="100%"
           width="100%"
@@ -284,44 +365,20 @@ const JSONEditor = ({ content, onContentChange, theme }) => {
           }}
         />
       </div>
-      <div
-        style={{
-          padding: "12px 16px",
-          background: theme === "vs-dark" ? "#1e1e1e" : "#ffffff",
-          borderTop: "1px solid " + (theme === "vs-dark" ? "#333" : "#ddd"),
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-        }}
-      >
+      <div className={`editor-toolbar ${theme}`}>
+        {/* 搜索按钮 */}
         <button
           onClick={() => setSearchVisible(!searchVisible)}
-          style={{
-            background: "transparent",
-            border: "none",
-            color: theme === "vs-dark" ? "#d4d4d4" : "#333333",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            padding: "8px",
-            fontSize: "16px",
-          }}
+          className="toolbar-button"
           title="正则表达式搜索"
         >
           <FaSearch />
-          <span style={{ marginLeft: "4px" }}>this</span>
         </button>
 
+        {/* 格式化按钮 */}
         <button
           onClick={formatJSON}
-          style={{
-            background: "transparent",
-            border: "none",
-            color: theme === "vs-dark" ? "#d4d4d4" : "#333333",
-            cursor: "pointer",
-            padding: "8px",
-            fontSize: "16px",
-          }}
+          className="toolbar-button"
           title="格式化JSON"
         >
           <FaCode />
@@ -329,109 +386,193 @@ const JSONEditor = ({ content, onContentChange, theme }) => {
 
         <div style={{ flex: 1 }} />
 
-        <button
-          onClick={collapseAll}
-          style={{
-            background: "transparent",
-            border: "none",
-            color: theme === "vs-dark" ? "#d4d4d4" : "#333333",
-            cursor: "pointer",
-            padding: "8px",
-            fontSize: "16px",
-          }}
-          title="折叠全部"
-        >
-          <BiCollapseVertical />
-        </button>
+        {/* 1. 折叠/展开类 - 下拉菜单 */}
+        <div className="dropdown-container">
+          <button
+            onClick={() => handleDropdownToggle("fold")}
+            className="toolbar-button"
+            title="折叠/展开选项"
+          >
+            <FaFolder />
+            <span className="dropdown-icon">
+              {activeDropdown === "fold" ? <FaChevronUp /> : <FaChevronDown />}
+            </span>
+          </button>
+          {activeDropdown === "fold" && (
+            <div className={`dropdown-menu ${theme}`}>
+              <div
+                className="dropdown-item"
+                onClick={() => {
+                  collapseAll();
+                  setActiveDropdown(null);
+                }}
+              >
+                <BiCollapseVertical />
+                <span>折叠全部</span>
+              </div>
+              <div
+                className="dropdown-item"
+                onClick={() => {
+                  expandAll();
+                  setActiveDropdown(null);
+                }}
+              >
+                <BiExpandVertical />
+                <span>展开全部</span>
+              </div>
+            </div>
+          )}
+        </div>
 
-        <button
-          onClick={expandAll}
-          style={{
-            background: "transparent",
-            border: "none",
-            color: theme === "vs-dark" ? "#d4d4d4" : "#333333",
-            cursor: "pointer",
-            padding: "8px",
-            fontSize: "16px",
-          }}
-          title="展开全部"
-        >
-          <BiExpandVertical />
-        </button>
+        {/* 2. 消除类 - 下拉菜单 */}
+        <div className="dropdown-container">
+          <button
+            onClick={() => handleDropdownToggle("erase")}
+            className="toolbar-button"
+            title="消除选项"
+          >
+            <FaEraser />
+            <span className="dropdown-icon">
+              {activeDropdown === "erase" ? <FaChevronUp /> : <FaChevronDown />}
+            </span>
+          </button>
+          {activeDropdown === "erase" && (
+            <div className={`dropdown-menu ${theme}`}>
+              <div
+                className="dropdown-item"
+                onClick={() => {
+                  removeComments();
+                  setActiveDropdown(null);
+                }}
+              >
+                <FaEraser />
+                <span>去除注释</span>
+              </div>
+              <div
+                className="dropdown-item"
+                onClick={() => {
+                  removeLineBreaks();
+                  setActiveDropdown(null);
+                }}
+              >
+                <FaEraser />
+                <span>去除回车</span>
+              </div>
+              <div
+                className="dropdown-item"
+                onClick={() => {
+                  removeEscapes();
+                  setActiveDropdown(null);
+                }}
+              >
+                <FaEraser />
+                <span>去除转义</span>
+              </div>
+            </div>
+          )}
+        </div>
 
-        <button
-          onClick={removeComments}
-          style={{
-            background: "transparent",
-            border: "none",
-            color: theme === "vs-dark" ? "#d4d4d4" : "#333333",
-            cursor: "pointer",
-            padding: "8px",
-            fontSize: "16px",
-          }}
-          title="去除注释"
-        >
-          <FaEraser />
-        </button>
+        {/* 3. 压缩类 - 下拉菜单 */}
+        <div className="dropdown-container">
+          <button
+            onClick={() => handleDropdownToggle("compress")}
+            className="toolbar-button"
+            title="压缩选项"
+          >
+            <FaCompress />
+            <span className="dropdown-icon">
+              {activeDropdown === "compress" ? (
+                <FaChevronUp />
+              ) : (
+                <FaChevronDown />
+              )}
+            </span>
+          </button>
+          {activeDropdown === "compress" && (
+            <div className={`dropdown-menu ${theme}`}>
+              <div
+                className="dropdown-item"
+                onClick={() => {
+                  compressAndCopy();
+                  setActiveDropdown(null);
+                }}
+              >
+                <FaCopy />
+                <span>压缩JSON并复制</span>
+              </div>
+              <div
+                className="dropdown-item"
+                onClick={() => {
+                  compressEscapeAndCopy();
+                  setActiveDropdown(null);
+                }}
+              >
+                <FaFileCode />
+                <span>压缩转义JSON并复制</span>
+              </div>
+            </div>
+          )}
+        </div>
 
-        <button
-          onClick={compressAndCopy}
-          style={{
-            background: "transparent",
-            border: "none",
-            color: theme === "vs-dark" ? "#d4d4d4" : "#333333",
-            cursor: "pointer",
-            padding: "8px",
-            fontSize: "16px",
-          }}
-          title="压缩JSON并复制"
-        >
-          <FaCopy />
-        </button>
+        {/* 4. 转换类 - 下拉菜单 */}
+        <div className="dropdown-container">
+          <button
+            onClick={() => handleDropdownToggle("convert")}
+            className="toolbar-button"
+            title="转换选项"
+          >
+            <FaFileExport />
+            <span className="dropdown-icon">
+              {activeDropdown === "convert" ? (
+                <FaChevronUp />
+              ) : (
+                <FaChevronDown />
+              )}
+            </span>
+          </button>
+          {activeDropdown === "convert" && (
+            <div className={`dropdown-menu ${theme}`}>
+              <div
+                className="dropdown-item"
+                onClick={() => {
+                  convertToYAMLAndCopy();
+                  setActiveDropdown(null);
+                }}
+              >
+                <FaFileAlt />
+                <span>转换为YAML并复制</span>
+              </div>
+              <div
+                className="dropdown-item"
+                onClick={() => {
+                  convertToXMLAndCopy();
+                  setActiveDropdown(null);
+                }}
+              >
+                <FaFileAlt />
+                <span>转换为XML并复制</span>
+              </div>
+              <div
+                className="dropdown-item"
+                onClick={() => {
+                  convertToTypeScriptAndCopy();
+                  setActiveDropdown(null);
+                }}
+              >
+                <FaFileCode />
+                <span>转换为TypeScript并复制</span>
+              </div>
+            </div>
+          )}
+        </div>
 
+        {/* 主题切换按钮 */}
         <button
-          onClick={compressEscapeAndCopy}
-          style={{
-            background: "transparent",
-            border: "none",
-            color: theme === "vs-dark" ? "#d4d4d4" : "#333333",
-            cursor: "pointer",
-            padding: "8px",
-            fontSize: "16px",
-          }}
-          title="压缩转义JSON并复制"
+          onClick={toggleTheme}
+          className="toolbar-button theme-toggle-button"
+          title={theme === "vs-dark" ? "切换到光亮模式" : "切换到暗黑模式"}
         >
-          <FaFileCode />
-        </button>
-
-        <button
-          onClick={convertToXMLAndCopy}
-          style={{
-            background: "transparent",
-            border: "none",
-            color: theme === "vs-dark" ? "#d4d4d4" : "#333333",
-            cursor: "pointer",
-            padding: "8px",
-            fontSize: "16px",
-          }}
-          title="转换为XML并复制"
-        >
-          <FaFileAlt />
-        </button>
-
-        <button
-          onClick={convertToTypeScriptAndCopy}
-          style={{
-            background: "transparent",
-            border: "none",
-            color: theme === "vs-dark" ? "#d4d4d4" : "#333333",
-            cursor: "pointer",
-            padding: "8px",
-            fontSize: "16px",
-          }}
-          title="转换为TypeScript并复制"
-        >
-          <FaFileCode />
+          {theme === "vs-dark" ? <FaSun /> : <FaMoon />}
         </button>
       </div>
     </div>

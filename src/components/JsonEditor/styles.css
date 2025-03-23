@@ -1,54 +1,183 @@
 /* 编辑器容器样式 - 全屏布局 */
 .json-editor-container {
   position: relative;
-  height: 100%;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
   width: 100%;
-  background: #2d4059;
   margin: 0;
   padding: 0;
 }
 
 /* 输入区域容器样式 */
 .input-section {
+  flex: 1;
   display: block;
-  height: 100%;
   padding: 0;
   margin: 0;
+  overflow: auto;
 }
 
-/* 文本输入框基础样式 */
-textarea {
-  width: 100%;
-  height: 100%;
-  min-width: 100%;
-  padding: 1rem;
-  border: 2px solid #decbc2;
-  border-radius: 4px;
-  background: #2d4059;
-  color: #decbc2;
-  font-family: monospace;
-  resize: none;
-  font-size: 14px;
-  box-sizing: border-box;
+/* 工具栏样式 */
+.editor-toolbar {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid;
 }
 
-/* 主题切换按钮基础样式 */
-button {
-  padding: 0.5rem 1rem;
-  background: #ea5455;
-  color: #decbc2;
+.vs-dark .editor-toolbar {
+  background: #1e1e1e;
+  border-color: #333;
+  color: #d4d4d4;
+}
+
+.light .editor-toolbar {
+  background: #ffffff;
+  border-color: #ddd;
+  color: #333333;
+}
+
+/* 工具按钮基础样式 */
+.toolbar-button {
+  background: transparent;
   border: none;
-  border-radius: 4px;
   cursor: pointer;
-  transition: background 0.3s;
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  font-size: 16px;
+  position: relative;
+  transition: all 0.2s ease;
 }
 
-button:hover {
-  background: #d84343;
+.vs-dark .toolbar-button {
+  color: #d4d4d4;
 }
 
-/* JSON校验错误提示样式 */
-.error-message {
-  color: #ff5555;
-  padding: 0.5rem;
+.light .toolbar-button {
+  color: #333333;
+}
+
+.toolbar-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.light .toolbar-button:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* 下拉菜单容器 */
+.dropdown-container {
+  position: relative;
+  display: inline-block;
+}
+
+/* 下拉菜单内容 */
+.dropdown-menu {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  min-width: 180px;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.vs-dark .dropdown-menu {
+  background: #252526;
+  border: 1px solid #3e3e3e;
+}
+
+.light .dropdown-menu {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+}
+
+/* 下拉菜单项 */
+.dropdown-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s;
+}
+
+.vs-dark .dropdown-item {
+  color: #d4d4d4;
+}
+
+.light .dropdown-item {
+  color: #333333;
+}
+
+.dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.light .dropdown-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* 搜索框样式 */
+.search-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 8px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vs-dark .search-container {
+  background: #1e1e1e;
+  border-bottom: 1px solid #333;
+}
+
+.light .search-container {
+  background: #ffffff;
+  border-bottom: 1px solid #ddd;
+}
+
+.search-input {
+  padding: 4px 8px;
+  border-radius: 4px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.vs-dark .search-input {
+  border: 1px solid #333;
+  background: #2d2d2d;
+  color: #ffffff;
+}
+
+.light .search-input {
+  border: 1px solid #ddd;
+  background: #ffffff;
+  color: #000000;
+}
+
+/* 主题切换按钮样式 */
+.theme-toggle-button {
+  margin-left: auto;
+}
+
+/* 按钮文本 */
+.button-text {
+  margin-left: 4px;
+}
+
+/* 下拉菜单图标 */
+.dropdown-icon {
+  margin-left: 4px;
+  font-size: 12px;
 }

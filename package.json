@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
+    "js-yaml": "^4.1.0",
     "lodash": "^4.17.21",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

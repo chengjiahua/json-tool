@@ -31,10 +31,8 @@ function App() {
         content={editorContent}
         onContentChange={setEditorContent}
         theme={theme}
+        onThemeChange={setTheme}
       />
-      <button onClick={toggleTheme} className="theme-toggle">
-        {theme === "vs-dark" ? "☀️" : "🌙"}
-      </button>
     </div>
   );
 }
