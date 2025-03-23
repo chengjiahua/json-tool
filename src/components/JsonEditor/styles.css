@@ -1,9 +1,10 @@
 .json-editor-container {
-  width: 100vw;
-  height: 100vh;
+  position: relative;
+  height: 100%;
+  width: 100%;
   background: #2d4059;
-  display: block;
-  overflow: hidden;
+  margin: 0;
+  padding: 0;
 }
 
 .input-section {
