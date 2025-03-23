@@ -417,10 +417,145 @@ const JSONEditor = ({ content, onContentChange, theme, onThemeChange }) => {
   };
 
   // 处理编辑器内容变更
-  const handleEditorChange = debounce((value) => {
-    // 直接传递用户输入的值，不进行自动转换
-    onContentChange(value);
-  }, 500);
+  const handleEditorChange = (value) => {
+    // 不再自动保存，仅更新编辑器内容
+    // 历史记录将在手动保存或粘贴时更新
+  };
+
+  // 处理编辑器粘贴事件
+  const handleEditorPaste = (event) => {
+    if (editorRef.current) {
+      setTimeout(() => {
+        const value = editorRef.current.getValue();
+        // 尝试自动识别并转换格式
+        try {
+          // 尝试解析XML
+          if (
+            value.trim().startsWith("<?xml") ||
+            value.trim().startsWith("<")
+          ) {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(value, "text/xml");
+            if (!xmlDoc.getElementsByTagName("parsererror").length) {
+              const convert = (node) => {
+                if (node.nodeType === 3) return node.nodeValue.trim();
+                const obj = {};
+                if (node.attributes) {
+                  for (let attr of node.attributes) {
+                    obj[`@${attr.name}`] = attr.value;
+                  }
+                }
+                for (let child of node.childNodes) {
+                  if (child.nodeType === 3 && child.nodeValue.trim()) {
+                    return child.nodeValue.trim();
+                  } else if (child.nodeType === 1) {
+                    const childResult = convert(child);
+                    if (obj[child.nodeName]) {
+                      if (!Array.isArray(obj[child.nodeName])) {
+                        obj[child.nodeName] = [obj[child.nodeName]];
+                      }
+                      obj[child.nodeName].push(childResult);
+                    } else {
+                      obj[child.nodeName] = childResult;
+                    }
+                  }
+                }
+                return obj;
+              };
+              const jsonStr = JSON.stringify(
+                convert(xmlDoc.documentElement),
+                null,
+                2
+              );
+              editorRef.current.setValue(jsonStr);
+            }
+          }
+          // 尝试解析YAML
+          else if (
+            value.includes(":") &&
+            !value.includes("{") &&
+            !value.includes("[")
+          ) {
+            const lines = value.split("\n");
+            let jsonObj = {};
+            let currentObj = jsonObj;
+            let stack = [jsonObj];
+            let currentIndent = 0;
+
+            for (let line of lines) {
+              if (!line.trim()) continue;
+              const indent = line.search(/\S/);
+              const [key, ...valueParts] = line.trim().split(":");
+              let val = valueParts.join(":").trim();
+
+              if (key.startsWith("- ")) {
+                if (!Array.isArray(currentObj)) {
+                  currentObj = [];
+                  stack[stack.length - 1] = currentObj;
+                }
+                currentObj.push(val || {});
+              } else if (val) {
+                try {
+                  currentObj[key] = JSON.parse(val);
+                } catch {
+                  currentObj[key] = val;
+                }
+              } else {
+                if (indent > currentIndent) {
+                  const newObj = {};
+                  currentObj[key] = newObj;
+                  stack.push(newObj);
+                  currentObj = newObj;
+                  currentIndent = indent;
+                } else if (indent < currentIndent) {
+                  stack.pop();
+                  currentObj = stack[stack.length - 1];
+                  currentIndent = indent;
+                }
+              }
+            }
+            const jsonStr = JSON.stringify(jsonObj, null, 2);
+            editorRef.current.setValue(jsonStr);
+          }
+          // 尝试解析TypeScript接口
+          else if (value.includes("interface") && value.includes("{")) {
+            const interfaces = value.match(/interface\s+\w+\s*{[^}]+}/g);
+            if (interfaces) {
+              const result = {};
+              for (const intf of interfaces) {
+                const name = intf.match(/interface\s+(\w+)/)[1];
+                const props = {};
+                const propMatches = intf.matchAll(/(\w+)\s*:\s*([^;]+);/g);
+                for (const [, prop, type] of propMatches) {
+                  if (type.includes("[]")) {
+                    props[prop] = [];
+                  } else if (type === "string") {
+                    props[prop] = "";
+                  } else if (type === "number") {
+                    props[prop] = 0;
+                  } else if (type === "boolean") {
+                    props[prop] = false;
+                  } else if (type === "any") {
+                    props[prop] = null;
+                  } else {
+                    props[prop] = {};
+                  }
+                }
+                result[name] = props;
+              }
+              const jsonStr = JSON.stringify(result, null, 2);
+              editorRef.current.setValue(jsonStr);
+            }
+          }
+        } catch (error) {
+          console.error("Format conversion failed:", error);
+        }
+        formatJSON();
+        // 粘贴时保存到历史记录
+        onContentChange(editorRef.current.getValue());
+      }, 100);
+    }
+  };
 
   // 处理编辑器键盘事件
   const handleEditorKeyDown = (event) => {
@@ -429,6 +564,8 @@ const JSONEditor = ({ content, onContentChange, theme, onThemeChange }) => {
       event.preventDefault();
       try {
         editorRef.current.getAction("editor.action.formatDocument").run();
+        // 触发内容变更以保存历史记录
+        onContentChange(editorRef.current.getValue());
       } catch (error) {
         // 保持错误处理逻辑
       }
@@ -468,6 +605,8 @@ const JSONEditor = ({ content, onContentChange, theme, onThemeChange }) => {
             editorRef.current = editor;
             // 添加键盘事件监听
             editor.onKeyDown(handleEditorKeyDown);
+            // 添加粘贴事件监听
+            editor.onDidPaste(handleEditorPaste);
           }}
         />
       </div>

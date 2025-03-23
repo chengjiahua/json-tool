@@ -60,8 +60,28 @@ const History = ({
   // 保存历史记录
   const saveToHistory = async (content) => {
     try {
-      // 检查是否为有效的JSON
-      JSON.parse(content);
+      // 检查是否为有效的JSON，并进行格式验证
+      const trimmedContent = content.trim();
+      if (
+        !trimmedContent ||
+        trimmedContent === "{}" ||
+        trimmedContent === "[]"
+      ) {
+        return; // 如果内容为空或空对象/数组，直接返回
+      }
+
+      // 尝试解析JSON并验证格式
+      const parsedJson = JSON.parse(trimmedContent);
+
+      // 验证是否为对象或数组，且不为空
+      if (
+        typeof parsedJson !== "object" ||
+        parsedJson === null ||
+        (Object.keys(parsedJson).length === 0 && !Array.isArray(parsedJson)) ||
+        (Array.isArray(parsedJson) && parsedJson.length === 0)
+      ) {
+        return; // 如果是空对象或空数组，不保存
+      }
 
       // 创建新的历史记录项
       const newHistoryItem = {
@@ -97,7 +117,12 @@ const History = ({
   // 生成历史记录预览
   const generatePreview = (content) => {
     try {
-      const jsonObj = JSON.parse(content);
+      const trimmedContent = content.trim();
+      if (!trimmedContent) {
+        return "Empty JSON";
+      }
+
+      const jsonObj = JSON.parse(trimmedContent);
       // 获取JSON的第一个键值对作为预览
       const keys = Object.keys(jsonObj);
       if (keys.length > 0) {
