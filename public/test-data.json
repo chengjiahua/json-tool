@@ -1,0 +1,93 @@
+{
+  "simpleTypes": {
+    "stringValue": "Hello, World!",
+    "numberValue": 42.5,
+    "booleanValue": true,
+    "nullValue": null
+  },
+  "specialCharacters": {
+    "escapeQuotes": "This string has \"quotes\" inside",
+    "newLines": "First line\nSecond line\nThird line",
+    "tabs": "Column1\tColumn2\tColumn3",
+    "unicode": "Unicode symbols: 🌟 🎉 🚀"
+  },
+  "arrayExamples": {
+    "emptyArray": [],
+    "simpleArray": [1, 2, 3, 4, 5],
+    "mixedArray": [1, "text", true, null, { "key": "value" }],
+    "largeArray": [
+      "item1",
+      "item2",
+      "item3",
+      "item4",
+      "item5",
+      "item6",
+      "item7",
+      "item8",
+      "item9",
+      "item10",
+      "item11",
+      "item12",
+      "item13",
+      "item14",
+      "item15"
+    ]
+  },
+  "nestedObjects": {
+    "level1": {
+      "level2": {
+        "level3": {
+          "level4": {
+            "level5": {
+              "deepValue": "This is a deeply nested value"
+            }
+          }
+        }
+      }
+    }
+  },
+  "complexExample": {
+    "id": "12345",
+    "timestamp": "2024-01-20T12:00:00Z",
+    "user": {
+      "id": 1,
+      "name": "John Doe",
+      "email": "john@example.com",
+      "preferences": {
+        "theme": "dark",
+        "notifications": true,
+        "languages": ["en", "es", "fr"]
+      }
+    },
+    "products": [
+      {
+        "id": "P001",
+        "name": "Product 1",
+        "price": 99.99,
+        "tags": ["electronics", "new"],
+        "stock": {
+          "warehouse1": 100,
+          "warehouse2": 150
+        }
+      },
+      {
+        "id": "P002",
+        "name": "Product 2",
+        "price": 149.99,
+        "tags": ["clothing", "sale"],
+        "stock": {
+          "warehouse1": 75,
+          "warehouse2": 0
+        }
+      }
+    ]
+  },
+  "edgeCases": {
+    "emptyString": "",
+    "emptyObject": {},
+    "zeroValue": 0,
+    "negativeNumber": -1000,
+    "scientificNotation": 1.23e-4,
+    "veryLongString": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+  }
+}

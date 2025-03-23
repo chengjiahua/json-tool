@@ -299,7 +299,7 @@ const JSONEditor = ({ content, onContentChange, theme, onThemeChange }) => {
     automaticLayout: true,
     // 粘贴时自动格式化JSON内容
     formatOnPaste: true,
-    // 输入时自动格式化当前行
+    // 输入时不自动格式化
     formatOnType: false,
     // 设置编辑器字体大小(px)
     fontSize: 14,
@@ -321,15 +321,119 @@ const JSONEditor = ({ content, onContentChange, theme, onThemeChange }) => {
    * @function
    * @param {string} value - 编辑器当前内容
    */
-  const handleEditorChange = debounce((value) => {
-    onContentChange(value);
+  // 自动识别并转换其他格式为JSON
+  const autoConvertToJson = (value) => {
     try {
+      // 尝试解析为JSON
       JSON.parse(value);
-      editorRef.current.getAction("editor.action.formatDocument").run();
+      return value;
     } catch (error) {
-      // 保持错误处理逻辑
+      try {
+        // 尝试解析为YAML
+        const yamlToJson = (yamlStr) => {
+          const lines = yamlStr.split("\n");
+          let jsonObj = {};
+          let currentObj = jsonObj;
+          let stack = [jsonObj];
+          let currentIndent = 0;
+
+          for (let line of lines) {
+            if (!line.trim()) continue;
+            const indent = line.search(/\S/);
+            const [key, ...valueParts] = line.trim().split(":");
+            let value = valueParts.join(":").trim();
+
+            if (key.startsWith("- ")) {
+              // 处理数组
+              if (!Array.isArray(currentObj)) {
+                currentObj = [];
+                stack[stack.length - 1] = currentObj;
+              }
+              currentObj.push(value || {});
+            } else if (value) {
+              // 处理键值对
+              currentObj[key] = value;
+            } else {
+              // 处理嵌套对象
+              if (indent > currentIndent) {
+                const newObj = {};
+                currentObj[key] = newObj;
+                stack.push(newObj);
+                currentObj = newObj;
+                currentIndent = indent;
+              } else if (indent < currentIndent) {
+                stack.pop();
+                currentObj = stack[stack.length - 1];
+                currentIndent = indent;
+              }
+            }
+          }
+          return JSON.stringify(jsonObj);
+        };
+        return yamlToJson(value);
+      } catch (yamlError) {
+        try {
+          // 尝试解析为XML
+          const xmlToJson = (xmlStr) => {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xmlStr, "text/xml");
+
+            const convert = (node) => {
+              if (node.nodeType === 3) return node.nodeValue.trim();
+
+              const obj = {};
+              if (node.attributes) {
+                for (let attr of node.attributes) {
+                  obj[`@${attr.name}`] = attr.value;
+                }
+              }
+
+              for (let child of node.childNodes) {
+                if (child.nodeType === 3 && child.nodeValue.trim()) {
+                  return child.nodeValue.trim();
+                } else if (child.nodeType === 1) {
+                  const childResult = convert(child);
+                  if (obj[child.nodeName]) {
+                    if (!Array.isArray(obj[child.nodeName])) {
+                      obj[child.nodeName] = [obj[child.nodeName]];
+                    }
+                    obj[child.nodeName].push(childResult);
+                  } else {
+                    obj[child.nodeName] = childResult;
+                  }
+                }
+              }
+              return obj;
+            };
+
+            return JSON.stringify(convert(xmlDoc.documentElement));
+          };
+          return xmlToJson(value);
+        } catch (xmlError) {
+          return value;
+        }
+      }
     }
+  };
+
+  // 处理编辑器内容变更
+  const handleEditorChange = debounce((value) => {
+    // 直接传递用户输入的值，不进行自动转换
+    onContentChange(value);
   }, 500);
+
+  // 处理编辑器键盘事件
+  const handleEditorKeyDown = (event) => {
+    // 检测Ctrl+S组合键
+    if ((event.ctrlKey || event.metaKey) && event.key === "s") {
+      event.preventDefault();
+      try {
+        editorRef.current.getAction("editor.action.formatDocument").run();
+      } catch (error) {
+        // 保持错误处理逻辑
+      }
+    }
+  };
 
   return (
     <div className="json-editor-container">
@@ -362,6 +466,8 @@ const JSONEditor = ({ content, onContentChange, theme, onThemeChange }) => {
           onChange={handleEditorChange}
           onMount={(editor) => {
             editorRef.current = editor;
+            // 添加键盘事件监听
+            editor.onKeyDown(handleEditorKeyDown);
           }}
         />
       </div>
