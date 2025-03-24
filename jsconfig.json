@@ -1,12 +1,9 @@
 {
   "compilerOptions": {
     "allowJs": true,
-    "types": [
-      "utools-api-types"
-    ]
+    "lib": ["ES6", "DOM"],
+    "target": "ES6",
+    "types": ["utools-api-types"]
   },
-  "include": [
-    "src/**/*.jsx",
-    "src/**/*.js"
-  ]
+  "include": ["src/**/*.jsx", "src/**/*.js"]
 }

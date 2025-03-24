@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>调试页面</title>
+  </head>
+  <body>
+    <h1>调试页面</h1>
+    <div id="status">检查中...</div>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const statusEl = document.getElementById("status");
+
+        try {
+          if (window.services) {
+            statusEl.innerHTML = "preload 加载成功! window.services 对象存在";
+            statusEl.style.color = "green";
+          } else {
+            statusEl.innerHTML = "错误: window.services 对象不存在!";
+            statusEl.style.color = "red";
+          }
+        } catch (err) {
+          statusEl.innerHTML = "错误: " + err.message;
+          statusEl.style.color = "red";
+        }
+
+        // 检查 uTools API
+        try {
+          if (window.utools) {
+            const apiStatus = document.createElement("div");
+            apiStatus.innerHTML = "uTools API 可用!";
+            apiStatus.style.color = "green";
+            document.body.appendChild(apiStatus);
+
+            // 显示更多信息
+            const info = document.createElement("pre");
+            info.textContent = JSON.stringify(
+              {
+                versions: window.utools.getAppVersion(),
+                path: window.utools.getPath("downloads"),
+              },
+              null,
+              2
+            );
+            document.body.appendChild(info);
+          }
+        } catch (err) {
+          const apiStatus = document.createElement("div");
+          apiStatus.innerHTML = "错误: uTools API 不可用! " + err.message;
+          apiStatus.style.color = "red";
+          document.body.appendChild(apiStatus);
+        }
+      });
+    </script>
+  </body>
+</html>

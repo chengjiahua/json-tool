@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>JSON工具 - 基础版</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        max-width: 800px;
+        margin: 0 auto;
+        line-height: 1.6;
+      }
+      h1 {
+        color: #333;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+      }
+      textarea {
+        width: 100%;
+        height: 300px;
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-family: monospace;
+      }
+      button {
+        background: #4caf50;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        margin: 5px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #45a049;
+      }
+      .error {
+        color: red;
+        background: #ffeeee;
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+      }
+      .toolbar {
+        margin: 10px 0;
+      }
+      .result {
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>JSON工具 - 基础版</h1>
+    <p>这是一个基本的JSON工具，可以格式化、压缩和验证JSON数据。</p>
+
+    <div class="toolbar">
+      <button id="formatBtn">格式化</button>
+      <button id="compressBtn">压缩</button>
+      <button id="validateBtn">验证</button>
+      <button id="clearBtn">清空</button>
+    </div>
+
+    <textarea id="jsonInput" placeholder="在此输入您的JSON数据..."></textarea>
+
+    <div id="errorMsg" class="error" style="display: none"></div>
+
+    <h3>结果：</h3>
+    <textarea id="jsonOutput" readonly></textarea>
+
+    <div class="toolbar">
+      <button id="copyBtn">复制结果</button>
+      <button id="saveBtn">保存到文件</button>
+    </div>
+
+    <script>
+      // 格式化JSON
+      function formatJSON(json) {
+        try {
+          const obj = JSON.parse(json);
+          return JSON.stringify(obj, null, 2);
+        } catch (e) {
+          showError("无效的JSON: " + e.message);
+          return json;
+        }
+      }
+
+      // 压缩JSON
+      function compressJSON(json) {
+        try {
+          const obj = JSON.parse(json);
+          return JSON.stringify(obj);
+        } catch (e) {
+          showError("无效的JSON: " + e.message);
+          return json;
+        }
+      }
+
+      // 验证JSON
+      function validateJSON(json) {
+        try {
+          JSON.parse(json);
+          showError("");
+          return "✓ JSON 格式有效";
+        } catch (e) {
+          showError("无效的JSON: " + e.message);
+          return "✗ JSON 格式无效: " + e.message;
+        }
+      }
+
+      // 显示错误
+      function showError(msg) {
+        const errorEl = document.getElementById("errorMsg");
+        if (msg) {
+          errorEl.textContent = msg;
+          errorEl.style.display = "block";
+        } else {
+          errorEl.style.display = "none";
+        }
+      }
+
+      // 保存文件
+      function saveToFile(content) {
+        if (window.services && window.services.writeTextFile) {
+          try {
+            const path = window.services.writeTextFile(content);
+            alert("文件已保存到: " + path);
+          } catch (e) {
+            showError("保存文件失败: " + e.message);
+          }
+        } else {
+          showError("保存功能需要uTools环境");
+        }
+      }
+
+      // 初始化事件
+      document.addEventListener("DOMContentLoaded", function () {
+        const formatBtn = document.getElementById("formatBtn");
+        const compressBtn = document.getElementById("compressBtn");
+        const validateBtn = document.getElementById("validateBtn");
+        const clearBtn = document.getElementById("clearBtn");
+        const copyBtn = document.getElementById("copyBtn");
+        const saveBtn = document.getElementById("saveBtn");
+        const jsonInput = document.getElementById("jsonInput");
+        const jsonOutput = document.getElementById("jsonOutput");
+
+        formatBtn.addEventListener("click", function () {
+          jsonOutput.value = formatJSON(jsonInput.value);
+        });
+
+        compressBtn.addEventListener("click", function () {
+          jsonOutput.value = compressJSON(jsonInput.value);
+        });
+
+        validateBtn.addEventListener("click", function () {
+          jsonOutput.value = validateJSON(jsonInput.value);
+        });
+
+        clearBtn.addEventListener("click", function () {
+          jsonInput.value = "";
+          jsonOutput.value = "";
+          showError("");
+        });
+
+        copyBtn.addEventListener("click", function () {
+          jsonOutput.select();
+          document.execCommand("copy");
+          alert("已复制到剪贴板!");
+        });
+
+        saveBtn.addEventListener("click", function () {
+          if (jsonOutput.value) {
+            saveToFile(jsonOutput.value);
+          } else {
+            showError("没有内容可保存");
+          }
+        });
+
+        // 尝试加载测试数据
+        if (window.services && window.services.readFile) {
+          try {
+            const testData = window.services.readFile("test-data.json");
+            jsonInput.value = testData;
+          } catch (e) {
+            console.log("加载测试数据失败:", e);
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

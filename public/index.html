@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // 添加全局错误处理
+      window.addEventListener("error", function (event) {
+        console.error("捕获到错误:", event.error);
+        document.body.innerHTML +=
+          '<div style="color:red;background:#ffeeee;padding:10px;margin:10px;border:1px solid red">错误: ' +
+          (event.error ? event.error.message : event.message) +
+          "</div>";
+      });
+
+      // 监控资源加载错误
+      window.addEventListener("unhandledrejection", function (event) {
+        console.error("未处理的 Promise 拒绝:", event.reason);
+        document.body.innerHTML +=
+          '<div style="color:orange;background:#fffaee;padding:10px;margin:10px;border:1px solid orange">Promise 错误: ' +
+          event.reason +
+          "</div>";
+      });
+
+      // 记录加载状态
+      console.log("页面开始加载");
+    </script>
+    <script
+      type="module"
+      crossorigin
+      src="./index.js"
+      onerror="console.error('无法加载 index.js');document.body.innerHTML += '<div style=\'color:red;padding:10px\'>无法加载主脚本 index.js</div>';"
+    ></script>
+    <link rel="stylesheet" crossorigin href="./assets/index.BJJ3wRj8.css" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      // DOM加载完成后检查root元素
+      document.addEventListener("DOMContentLoaded", function () {
+        console.log("DOM 已加载完成");
+        setTimeout(function () {
+          const root = document.getElementById("root");
+          if (root && root.children.length === 0) {
+            console.warn("React 应用可能未成功渲染到 root 元素");
+
+            // 创建备用内容，以防React应用未加载
+            const fallbackContent = document.createElement("div");
+            fallbackContent.style.padding = "20px";
+            fallbackContent.style.margin = "20px";
+            fallbackContent.style.border = "1px solid #ccc";
+            fallbackContent.innerHTML = `
+              <h2>JSON 工具</h2>
+              <p>应用加载状态：<span style="color:orange">React 应用可能未成功渲染</span></p>
+              <div>
+                <button onclick="window.location.reload()">刷新页面</button>
+                <button onclick="window.location.href='debug.html'">打开调试页面</button>
+              </div>
+              <div style="margin-top:20px">
+                <pre id="envInfo" style="background:#f5f5f5;padding:10px"></pre>
+              </div>
+            `;
+            root.appendChild(fallbackContent);
+
+            // 添加环境信息
+            const envInfo = document.getElementById("envInfo");
+            if (envInfo) {
+              try {
+                const info = {
+                  services: !!window.services,
+                  utools: !!window.utools,
+                };
+                if (window.services && window.services.debug) {
+                  info.debug = window.services.debug();
+                }
+                envInfo.textContent = JSON.stringify(info, null, 2);
+              } catch (e) {
+                envInfo.textContent = "获取环境信息时出错: " + e.message;
+              }
+            }
+          }
+        }, 2000); // 给React应用2秒钟的渲染时间
+      });
+    </script>
+  </body>
+</html>

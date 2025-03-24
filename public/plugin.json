@@ -2,17 +2,26 @@
   "main": "index.html",
   "preload": "preload/services.js",
   "logo": "logo.png",
+  /*
   "development": {
     "main": "http://localhost:5173"
   },
+  */
   "features": [
     {
       "code": "hello",
       "explain": "这是插件应用的第一个功能",
-      "cmds": [
-        "你好",
-        "hello"
-      ]
+      "cmds": ["你好", "hello"]
+    },
+    {
+      "code": "debug",
+      "explain": "调试页面",
+      "cmds": ["调试", "debug"]
+    },
+    {
+      "code": "basic",
+      "explain": "JSON工具-基础版",
+      "cmds": ["基础版", "basic"]
     },
     {
       "code": "read",
